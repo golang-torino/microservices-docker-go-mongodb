@@ -174,3 +174,30 @@ services:
         target: /backup
     labels:
       - "traefik.enable=false"
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    command:
+      - "--config.file=/etc/prometheus/prom.yml"
+    restart: always
+    volumes:
+      # Store Prometheus data in a volume:
+      - prom_data:/prometheus
+      # Mount the prom.yml config file
+      - ./hack/prom.yml:/etc/prometheus/prom.yml
+    labels:
+      - "traefik.enable=false"
+
+  otelcol:
+    image: otel/opentelemetry-collector:0.102.1
+    restart: always
+    depends_on:
+      - prometheus
+    volumes:
+      # Mount the otelcol.yml config file
+      - ./hack/otelcol.yml:/etc/otelcol/config.yaml
+    labels:
+      - "traefik.enable=false"
+
+volumes:
+  prom_data:
