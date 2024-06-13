@@ -25,3 +25,21 @@
     watch = false
 
   [providers.docker]
+
+[tracing]
+  [tracing.otlp.http]
+    endpoint = "http://otelcol:4318/v1/traces"
+  [tracing.otlp.http.headers]
+    city = "turin"
+    country = "italy"
+    event = "meetup"
+  [tracing.otlp.http.tls]
+    insecureSkipVerify = true
+  [tracing.otlp.grpc]
+    endpoint = "otelcol:4317"
+  [tracing.otlp.grpc.headers]
+    city = "turin"
+    country = "italy"
+    event = "meetup"
+  [tracing.otlp.grpc.tls]
+    insecureSkipVerify = true
