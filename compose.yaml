@@ -3,11 +3,11 @@ services:
     image: traefik:v2.4.2
     command:
       # - "--log.level=DEBUG"
-      - "--api=true"
-      - "--api.dashboard=true"
-      - "--api.insecure=true" # Don't do that in production
-      - "--providers.docker"
-      - "--entrypoints.web.address=:80"
+      # - "--api=true"
+      # - "--api.dashboard=true"
+      # - "--api.insecure=true" # Don't do that in production
+      # - "--providers.docker"
+      # - "--entrypoints.web.address=:80"
       # add pilot token service
       # - "--pilot.token=3d1bd97f-cb9d-4cde-8112-77ce2f5abc92"
       # install plugin rewrite body
@@ -23,6 +23,8 @@ services:
       # - "traefik.http.middlewares.my-rewrite.plugin.plugin-rewrite.rewrites[0].regex=ID"
       # - "traefik.http.middlewares.my-rewrite.plugin.plugin-rewrite.rewrites[0].replacement=MY-ID"
     volumes:
+      # Mount the traefik.toml config file
+      - ./hack/traefik.toml:/etc/traefik/traefik.toml
       - type: bind
         source: /var/run/docker.sock
         target: /var/run/docker.sock
@@ -65,7 +67,8 @@ services:
     # environment:
     #   MONGODB_USERNAME: "demo"
     #   MONGODB_PASSWORD: "e3LBVTPdlzxYbxt9"
-    labels: {}
+    labels:
+      - "traefik.enable=false"
       # Enable public access
       # - "traefik.http.routers.movies.rule=PathPrefix(`/api/movies/`)"
       # - "traefik.http.services.movies.loadbalancer.server.port=4000"
@@ -83,7 +86,8 @@ services:
     # environment:
     #   MONGODB_USERNAME: "demo"
     #   MONGODB_PASSWORD: "e3LBVTPdlzxYbxt9"
-    labels: {}
+    labels:
+      - "traefik.enable=false"
       # Enable public access
       # - "traefik.http.routers.bookings.rule=PathPrefix(`/api/bookings/`)"
       # - "traefik.http.services.bookings.loadbalancer.server.port=4000"
@@ -99,7 +103,8 @@ services:
     # environment:
     #   MONGODB_USERNAME: "demo"
     #   MONGODB_PASSWORD: "e3LBVTPdlzxYbxt9"
-    labels: {}
+    labels:
+      - "traefik.enable=false"
       # Enable public access
       # - "traefik.http.routers.showtimes.rule=PathPrefix(`/api/showtimes/`)"
       # - "traefik.http.services.showtimes.loadbalancer.server.port=4000"
@@ -115,7 +120,8 @@ services:
     # environment:
     #   MONGODB_USERNAME: "demo"
     #   MONGODB_PASSWORD: "e3LBVTPdlzxYbxt9"
-    labels: {}
+    labels:
+      - "traefik.enable=false"
       # Enable public access
       # - "traefik.http.routers.users.rule=PathPrefix(`/api/users/`)"
       # - "traefik.http.services.users.loadbalancer.server.port=4000"
@@ -131,3 +137,5 @@ services:
       - type: bind
         source: ./backup
         target: /backup
+    labels:
+      - "traefik.enable=false"
