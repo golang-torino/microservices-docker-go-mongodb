@@ -199,5 +199,43 @@ services:
     labels:
       - "traefik.enable=false"
 
+  grafana:
+    image: grafana/grafana:10.4.4
+    volumes:
+      - ./hack/grafana.ini:/etc/grafana/grafana.ini
+      - ./hack/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yaml
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    ports:
+      - target: 3000
+        published: 8081
+        protocol: tcp
+        mode: host
+    labels:
+      - "traefik.enable=false"
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.58.0
+    volumes:
+      - "./hack/jaeger-ui.json:/etc/jaeger/jaeger-ui.json"
+    command: --query.ui-config /etc/jaeger/jaeger-ui.json
+    environment:
+      - METRICS_STORAGE_TYPE=prometheus
+      - PROMETHEUS_SERVER_URL=http://prometheus:9090
+      - PROMETHEUS_QUERY_SUPPORT_SPANMETRICS_CONNECTOR=${PROMETHEUS_QUERY_SUPPORT_SPANMETRICS_CONNECTOR:-true}
+      - PROMETHEUS_QUERY_NAMESPACE=${PROMETHEUS_QUERY_NAMESPACE:-}
+      - PROMETHEUS_QUERY_DURATION_UNIT=${PROMETHEUS_QUERY_DURATION_UNIT:-}
+      - PROMETHEUS_QUERY_NORMALIZE_CALLS=true
+      - PROMETHEUS_QUERY_NORMALIZE_DURATION=true
+    ports:
+      - target: 16686
+        published: 8082
+        protocol: tcp
+        mode: host
+    labels:
+      - "traefik.enable=false"
+
 volumes:
   prom_data:
