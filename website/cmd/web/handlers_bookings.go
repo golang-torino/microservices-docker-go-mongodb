@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"text/template"
@@ -9,6 +10,8 @@ import (
 	"github.com/mmorejon/microservices-docker-go-mongodb/bookings/pkg/models"
 	modelsShowTime "github.com/mmorejon/microservices-docker-go-mongodb/showtimes/pkg/models"
 	modelsUser "github.com/mmorejon/microservices-docker-go-mongodb/users/pkg/models"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type bookingTemplateData struct {
@@ -24,10 +27,15 @@ type bookingData struct {
 	ShowTimeDate string
 }
 
-func (app *application) loadBookingData(btd *bookingTemplateData, isList bool) {
+func (app *application) loadBookingData(ctx context.Context, btd *bookingTemplateData, isList bool) {
+	_, span := app.tracer.Start(ctx, "load booking data")
+	defer span.End()
+
 	// Clean booking data
 	btd.BookingsData = []bookingData{}
 	btd.BookingData = bookingData{}
+
+	span.SetAttributes(attribute.Bool("list", isList))
 
 	// Load booking data
 	if isList {
@@ -97,7 +105,7 @@ func (app *application) bookingsList(w http.ResponseWriter, r *http.Request) {
 	app.infoLog.Println(td.Bookings)
 	app.infoLog.Println(td)
 
-	app.loadBookingData(&td, true)
+	app.loadBookingData(r.Context(), &td, true)
 
 	// Load template files
 	files := []string{
@@ -137,7 +145,7 @@ func (app *application) bookingsView(w http.ResponseWriter, r *http.Request) {
 	app.infoLog.Println(td.Booking)
 	app.infoLog.Println(url)
 
-	app.loadBookingData(&td, false)
+	app.loadBookingData(r.Context(), &td, false)
 
 	// Load template files
 	files := []string{
