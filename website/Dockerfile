@@ -7,7 +7,7 @@ WORKDIR /opt/web/
 COPY go.mod go.sum ./
 # fetch dependancies
 RUN go mod download && \
-    go mod verify
+  go mod verify
 # copy the source code as the last step
 COPY . .
 # build binary
