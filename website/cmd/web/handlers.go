@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
 	"text/template"
+
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +33,11 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *application) getAPIContent(url string, templateData interface{}) error {
+func (app *application) getAPIContent(ctx context.Context, url string, templateData interface{}) error {
+	_, span := app.tracer.Start(ctx, "getAPIContent")
+	defer span.End()
+
+	span.SetAttributes(semconv.HTTPURL(url))
 	resp, err := http.Get(url)
 	if err != nil {
 		return err

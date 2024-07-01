@@ -21,7 +21,7 @@ func (app *application) moviesList(w http.ResponseWriter, r *http.Request) {
 	// Get movies list from API
 	var mtd movieTemplateData
 	app.infoLog.Println("Calling movies API...")
-	app.getAPIContent(app.apis.movies, &mtd.Movies)
+	app.getAPIContent(r.Context(), app.apis.movies, &mtd.Movies)
 	app.infoLog.Println(mtd.Movies)
 
 	// Load template files
