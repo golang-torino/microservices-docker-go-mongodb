@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type apis struct {
@@ -20,6 +24,9 @@ type application struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
 	apis     apis
+
+	tracer   trace.Tracer
+	measures *measures
 }
 
 var infoLog *log.Logger
@@ -47,6 +54,17 @@ func run() error {
 	bookingsAPI := flag.String("bookingsAPI", "http://localhost:4000/api/bookings/", "Bookings API")
 	flag.Parse()
 
+	shutdown, err := setupOTelSDK(context.Background())
+	if err != nil {
+		errLog.Fatal(err)
+	}
+	defer func() {
+		// TODO: add a timeout?
+		if err := shutdown(context.Background()); err != nil {
+			errLog.Printf("failed shutting down tracer provider: %s", err)
+		}
+	}()
+
 	// Initialize a new instance of application containing the dependencies.
 	app := &application{
 		infoLog:  infoLog,
@@ -57,6 +75,9 @@ func run() error {
 			showtimes: *showtimesAPI,
 			bookings:  *bookingsAPI,
 		},
+
+		tracer:   otel.GetTracerProvider().Tracer("website"),
+		measures: createMeasures(otel.GetMeterProvider().Meter("website")),
 	}
 
 	// Initialize a new http.Server struct.
