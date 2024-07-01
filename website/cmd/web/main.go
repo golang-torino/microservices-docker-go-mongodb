@@ -10,20 +10,34 @@ import (
 )
 
 type apis struct {
-	users string
-	movies string
+	users     string
+	movies    string
 	showtimes string
-	bookings string
+	bookings  string
 }
 
 type application struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
-	apis apis
+	apis     apis
 }
 
-func main() {
+var infoLog *log.Logger
+var errLog *log.Logger
 
+func main() {
+	// Create logger for writing information and error messages.
+	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errLog = log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
+	if err := run(); err != nil {
+		errLog.Fatal(err)
+	} else {
+		infoLog.Println("I'm done")
+	}
+}
+
+func run() error {
 	// Define command-line flags
 	serverAddr := flag.String("serverAddr", "", "HTTP server network address")
 	serverPort := flag.Int("serverPort", 8000, "HTTP server network port")
@@ -33,19 +47,15 @@ func main() {
 	bookingsAPI := flag.String("bookingsAPI", "http://localhost:4000/api/bookings/", "Bookings API")
 	flag.Parse()
 
-	// Create logger for writing information and error messages.
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	errLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
-
 	// Initialize a new instance of application containing the dependencies.
 	app := &application{
 		infoLog:  infoLog,
 		errorLog: errLog,
 		apis: apis{
-			users: *usersAPI,
-			movies: *moviesAPI,
+			users:     *usersAPI,
+			movies:    *moviesAPI,
 			showtimes: *showtimesAPI,
-			bookings: *bookingsAPI,
+			bookings:  *bookingsAPI,
 		},
 	}
 
@@ -61,6 +71,5 @@ func main() {
 	}
 
 	infoLog.Printf("Starting server on %s", serverURI)
-	err := srv.ListenAndServe()
-	errLog.Fatal(err)
+	return srv.ListenAndServe()
 }
