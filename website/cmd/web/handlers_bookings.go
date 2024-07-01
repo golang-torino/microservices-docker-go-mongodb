@@ -114,17 +114,10 @@ func (app *application) bookingsList(w http.ResponseWriter, r *http.Request) {
 		"./ui/html/footer.partial.tmpl",
 	}
 
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
+	if err = renderTemplates(app.tracer, r.Context(), files, td, w); err != nil {
 		app.errorLog.Println(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
-	}
-
-	err = ts.Execute(w, td)
-	if err != nil {
-		app.errorLog.Println(err.Error())
-		http.Error(w, "Internal Server Error", 500)
 	}
 }
 
@@ -154,16 +147,26 @@ func (app *application) bookingsView(w http.ResponseWriter, r *http.Request) {
 		"./ui/html/footer.partial.tmpl",
 	}
 
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
+	if err = renderTemplates(app.tracer, r.Context(), files, td, w); err != nil {
 		app.errorLog.Println(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
 	}
+}
+
+func renderTemplates(t trace.Tracer, ctx context.Context, files []string, td bookingTemplateData, w http.ResponseWriter) error {
+	_, span := t.Start(ctx, "render template")
+	defer span.End()
+
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		return err
+	}
 
 	err = ts.Execute(w, td)
 	if err != nil {
-		app.errorLog.Println(err.Error())
-		http.Error(w, "Internal Server Error", 500)
+		return err
 	}
+
+	return nil
 }
