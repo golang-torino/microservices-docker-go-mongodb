@@ -18,7 +18,7 @@ func (app *application) usersList(w http.ResponseWriter, r *http.Request) {
 
 	// Get users list from API
 	var utd userTemplateData
-	err := app.getAPIContent(app.apis.users, &utd.Users)
+	err := app.getAPIContent(r.Context(), app.apis.users, &utd.Users)
 	if err != nil {
 		app.errorLog.Println(err.Error())
 	}
@@ -55,7 +55,7 @@ func (app *application) usersView(w http.ResponseWriter, r *http.Request) {
 	url := fmt.Sprintf("%s/%s", app.apis.users, userID)
 
 	var utd userTemplateData
-	app.getAPIContent(url, &utd.User)
+	app.getAPIContent(r.Context(), url, &utd.User)
 	app.infoLog.Println(utd.User)
 
 	// Load template files

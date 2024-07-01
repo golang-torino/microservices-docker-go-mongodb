@@ -28,7 +28,7 @@ type bookingData struct {
 }
 
 func (app *application) loadBookingData(ctx context.Context, btd *bookingTemplateData, isList bool) {
-	_, span := app.tracer.Start(ctx, "load booking data")
+	ctx, span := app.tracer.Start(ctx, "load booking data")
 	defer span.End()
 
 	// Clean booking data
@@ -43,7 +43,7 @@ func (app *application) loadBookingData(ctx context.Context, btd *bookingTemplat
 			// Load user data
 			userURL := fmt.Sprintf("%s/%s", app.apis.users, b.UserID)
 			var user modelsUser.User
-			err := app.getAPIContent(userURL, &user)
+			err := app.getAPIContent(ctx, userURL, &user)
 			if err != nil {
 				app.errorLog.Println(err.Error())
 			}
@@ -51,7 +51,7 @@ func (app *application) loadBookingData(ctx context.Context, btd *bookingTemplat
 			// Load showtime data
 			showtimeURL := fmt.Sprintf("%s/%s", app.apis.showtimes, b.ShowtimeID)
 			var showtime modelsShowTime.ShowTime
-			err = app.getAPIContent(showtimeURL, &showtime)
+			err = app.getAPIContent(ctx, showtimeURL, &showtime)
 			if err != nil {
 				app.errorLog.Println(err.Error())
 			}
@@ -70,7 +70,7 @@ func (app *application) loadBookingData(ctx context.Context, btd *bookingTemplat
 		// Load user data
 		userURL := fmt.Sprintf("%s/%s", app.apis.users, b.UserID)
 		var user modelsUser.User
-		err := app.getAPIContent(userURL, &user)
+		err := app.getAPIContent(ctx, userURL, &user)
 		if err != nil {
 			app.errorLog.Println(err.Error())
 		}
@@ -79,7 +79,7 @@ func (app *application) loadBookingData(ctx context.Context, btd *bookingTemplat
 		showtimeURL := fmt.Sprintf("%s/%s", app.apis.showtimes, b.ShowtimeID)
 		var showtime modelsShowTime.ShowTime
 
-		err = app.getAPIContent(showtimeURL, &showtime)
+		err = app.getAPIContent(ctx, showtimeURL, &showtime)
 		if err != nil {
 			app.errorLog.Println(err.Error())
 		}
@@ -93,12 +93,11 @@ func (app *application) loadBookingData(ctx context.Context, btd *bookingTemplat
 }
 
 func (app *application) bookingsList(w http.ResponseWriter, r *http.Request) {
-
 	// Get bookings list from API
 	var td bookingTemplateData
 	app.infoLog.Println("Calling bookings API...")
 
-	err := app.getAPIContent(app.apis.bookings, &td.Bookings)
+	err := app.getAPIContent(r.Context(), app.apis.bookings, &td.Bookings)
 	if err != nil {
 		app.errorLog.Println(err.Error())
 	}
@@ -131,7 +130,7 @@ func (app *application) bookingsView(w http.ResponseWriter, r *http.Request) {
 	app.infoLog.Println("Calling bookings API...")
 	url := fmt.Sprintf("%s/%s", app.apis.bookings, bookingID)
 
-	err := app.getAPIContent(url, &td.Booking)
+	err := app.getAPIContent(r.Context(), url, &td.Booking)
 	if err != nil {
 		app.errorLog.Println(err.Error())
 	}
