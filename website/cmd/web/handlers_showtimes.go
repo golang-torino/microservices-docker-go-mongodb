@@ -22,7 +22,7 @@ type showtimeTemplateData struct {
 func (app *application) showtimesList(w http.ResponseWriter, r *http.Request) {
 
 	// Get showtimes list from API
-	app.infoLog.Println("Calling showtimes API...")
+	app.log.Info("Calling showtimes API...")
 	resp, err := http.Get(app.apis.showtimes)
 	if err != nil {
 		fmt.Print(err.Error())
@@ -36,7 +36,7 @@ func (app *application) showtimesList(w http.ResponseWriter, r *http.Request) {
 
 	var td showtimeTemplateData
 	json.Unmarshal(bodyBytes, &td.ShowTimes)
-	app.infoLog.Println(td.ShowTimes)
+	app.log.Info("prepared showtimes template", "data", td.ShowTimes)
 
 	// Load template files
 	files := []string{
@@ -65,7 +65,7 @@ func (app *application) showtimesView(w http.ResponseWriter, r *http.Request) {
 	showtimeID := vars["id"]
 
 	// Get showtimes list from API
-	app.infoLog.Println("Calling showtimes API...")
+	app.log.Info("Calling showtimes API...")
 	url := fmt.Sprintf("%s/%s", app.apis.showtimes, showtimeID)
 
 	resp, err := http.Get(url)
@@ -81,7 +81,7 @@ func (app *application) showtimesView(w http.ResponseWriter, r *http.Request) {
 
 	var td showtimeTemplateData
 	json.Unmarshal(bodyBytes, &td.ShowTime)
-	app.infoLog.Println(td.ShowTime)
+	app.log.Info("prepared showtime template", "data", td.ShowTime)
 
 	// Load movie names
 	var movies []string
