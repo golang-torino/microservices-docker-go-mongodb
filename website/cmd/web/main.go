@@ -65,7 +65,6 @@ func run() error {
 	}()
 
 	l := otelslog.NewLogger("website", otelslog.WithLoggerProvider(global.GetLoggerProvider()))
-	slog.SetDefault(l)
 
 	// Initialize a new instance of application containing the dependencies.
 	app := &application{
