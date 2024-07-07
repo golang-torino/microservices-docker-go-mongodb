@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
@@ -130,8 +131,17 @@ func newLoggerProvider() (*log.LoggerProvider, error) {
 		return nil, err
 	}
 
+	// grpc exporter has not been implemented yet
+	// See https://github.com/open-telemetry/opentelemetry-go/issues/5056
+	httpExporter, err := otlploghttp.New(context.Background())
+	if err != nil {
+		panic(err)
+	}
+
 	loggerProvider := log.NewLoggerProvider(
-		log.WithProcessor(log.NewBatchProcessor(logExporter)),
+		log.WithProcessor(log.NewSimpleProcessor(logExporter)),
+		// default interval is 1s
+		log.WithProcessor(log.NewBatchProcessor(httpExporter)),
 	)
 	return loggerProvider, nil
 }
