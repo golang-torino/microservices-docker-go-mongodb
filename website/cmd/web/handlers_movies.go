@@ -33,14 +33,14 @@ func (app *application) moviesList(w http.ResponseWriter, r *http.Request) {
 
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
 	}
 
 	err = ts.Execute(w, mtd)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 	}
 }
@@ -78,14 +78,14 @@ func (app *application) moviesView(w http.ResponseWriter, r *http.Request) {
 
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
 	}
 
 	err = ts.Execute(w, td.Movie)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 	}
 }

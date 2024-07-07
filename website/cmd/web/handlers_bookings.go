@@ -45,7 +45,7 @@ func (app *application) loadBookingData(ctx context.Context, btd *bookingTemplat
 			var user modelsUser.User
 			err := app.getAPIContent(ctx, userURL, &user)
 			if err != nil {
-				app.errorLog.Println(err.Error())
+				app.log.Error(err.Error())
 			}
 
 			// Load showtime data
@@ -53,7 +53,7 @@ func (app *application) loadBookingData(ctx context.Context, btd *bookingTemplat
 			var showtime modelsShowTime.ShowTime
 			err = app.getAPIContent(ctx, showtimeURL, &showtime)
 			if err != nil {
-				app.errorLog.Println(err.Error())
+				app.log.Error(err.Error())
 			}
 
 			bookingData := bookingData{
@@ -72,7 +72,7 @@ func (app *application) loadBookingData(ctx context.Context, btd *bookingTemplat
 		var user modelsUser.User
 		err := app.getAPIContent(ctx, userURL, &user)
 		if err != nil {
-			app.errorLog.Println(err.Error())
+			app.log.Error(err.Error())
 		}
 
 		// Load showtime data
@@ -81,7 +81,7 @@ func (app *application) loadBookingData(ctx context.Context, btd *bookingTemplat
 
 		err = app.getAPIContent(ctx, showtimeURL, &showtime)
 		if err != nil {
-			app.errorLog.Println(err.Error())
+			app.log.Error(err.Error())
 		}
 
 		btd.BookingData = bookingData{
@@ -99,7 +99,7 @@ func (app *application) bookingsList(w http.ResponseWriter, r *http.Request) {
 
 	err := app.getAPIContent(r.Context(), app.apis.bookings, &td.Bookings)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 	}
 	app.log.Info("retrieved bookings", "bookings", td.Bookings)
 	app.log.Info("prepared bookings template", "data", td)
@@ -114,7 +114,7 @@ func (app *application) bookingsList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = renderTemplates(app.tracer, r.Context(), files, td, w); err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error("cannot render template", "error", err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
 	}
@@ -132,7 +132,9 @@ func (app *application) bookingsView(w http.ResponseWriter, r *http.Request) {
 
 	err := app.getAPIContent(r.Context(), url, &td.Booking)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error("cannot retrieve content from API", "error", err.Error())
+		http.Error(w, "Internal Server Error", 500)
+		return
 	}
 	app.log.Info("retrieved booking data from url",
 		"booking", td.Booking,
@@ -148,7 +150,7 @@ func (app *application) bookingsView(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = renderTemplates(app.tracer, r.Context(), files, td, w); err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
 	}
