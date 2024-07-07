@@ -39,6 +39,19 @@ The application can be deployed in both environments: **local machine** or in a 
 
 * [endpoints](./docs/endpoints.md)
 
+## How to observe services
+
+Services are instrumented through OpenTelemetry. If a service is not yet instrumented, you're welcome to add it!
+
+### Setup
+
+Each service is already configured in Docker Compose to support otel signals collection.
+
+Copy the `.env.example` and provide all required information. Pay attention to:
+- update `SERVICE_ENVIRONMENT` if multiple users are using the same otel backend, to help with filtering.
+- update `OTEL_EXPORTER_OTLP_ENDPOINT` with your backend endpoint
+- update `OTEL_EXPORTER_OTLP_HEADERS` with your backend authentication token
+
 ## Related Posts
 
 * [Traefik 2 - Advanced configuration with Docker Compose](https://mmorejon.io/en/blog/traefik-2-advanced-configuration-docker-compose/)
