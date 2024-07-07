@@ -20,7 +20,7 @@ func (app *application) usersList(w http.ResponseWriter, r *http.Request) {
 	var utd userTemplateData
 	err := app.getAPIContent(r.Context(), app.apis.users, &utd.Users)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 	}
 	app.log.Info("retrieved users", "users", utd.Users)
 
@@ -33,14 +33,14 @@ func (app *application) usersList(w http.ResponseWriter, r *http.Request) {
 
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
 	}
 
 	err = ts.Execute(w, utd)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 	}
 }
@@ -67,14 +67,14 @@ func (app *application) usersView(w http.ResponseWriter, r *http.Request) {
 
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
 	}
 
 	err = ts.Execute(w, utd.User)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 	}
 }
