@@ -24,9 +24,8 @@ type apis struct {
 }
 
 type application struct {
-	log      *slog.Logger
-	errorLog *log.Logger
-	apis     apis
+	log  *slog.Logger
+	apis apis
 
 	tracer   trace.Tracer
 	measures *measures
@@ -36,11 +35,9 @@ var infoLog *log.Logger
 var errLog *log.Logger
 
 func main() {
-	// Create logger for writing information and error messages.
-	errLog = log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
-
 	if err := run(); err != nil {
-		errLog.Fatal(err)
+		fmt.Printf("exited with error: %s\n", err)
+		os.Exit(1)
 	} else {
 		fmt.Println("I'm done")
 	}
@@ -72,8 +69,7 @@ func run() error {
 
 	// Initialize a new instance of application containing the dependencies.
 	app := &application{
-		log:      l,
-		errorLog: errLog,
+		log: l,
 		apis: apis{
 			users:     *usersAPI,
 			movies:    *moviesAPI,
