@@ -55,6 +55,13 @@ services:
       # Enable public access
       - "traefik.http.routers.website.rule=PathPrefix(`/`)"
       - "traefik.http.services.website.loadbalancer.server.port=8000"
+    environment:
+      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=website,service.version=${WEBSITE_SERVICE_VERSION},deployment.environment=${SERVICE_ENVIRONMENT}
+    env_file:
+      - path: .env
+        required: true
 
   movies:
     build: ./movies
@@ -74,6 +81,13 @@ services:
       # - "traefik.http.services.movies.loadbalancer.server.port=4000"
       # Apply middlewares
       # - "traefik.http.routers.movies.middlewares=my-header,my-compress"
+    environment:
+      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=movies,service.version=${MOVIES_SERVICE_VERSION},deployment.environment=${SERVICE_ENVIRONMENT}
+    env_file:
+      - path: .env
+        required: true
 
   bookings:
     build: ./bookings
@@ -91,6 +105,13 @@ services:
       # Enable public access
       # - "traefik.http.routers.bookings.rule=PathPrefix(`/api/bookings/`)"
       # - "traefik.http.services.bookings.loadbalancer.server.port=4000"
+    environment:
+      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=bookings,service.version=${BOOKINGS_SERVICE_VERSION},deployment.environment=${SERVICE_ENVIRONMENT}
+    env_file:
+      - path: .env
+        required: true
 
   showtimes:
     build: ./showtimes
@@ -108,6 +129,13 @@ services:
       # Enable public access
       # - "traefik.http.routers.showtimes.rule=PathPrefix(`/api/showtimes/`)"
       # - "traefik.http.services.showtimes.loadbalancer.server.port=4000"
+    environment:
+      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=showtimes,service.version=${SHOWTIMES_SERVICE_VERSION},deployment.environment=${SERVICE_ENVIRONMENT}
+    env_file:
+      - path: .env
+        required: true
 
   users:
     build: ./users
@@ -125,6 +153,13 @@ services:
       # Enable public access
       # - "traefik.http.routers.users.rule=PathPrefix(`/api/users/`)"
       # - "traefik.http.services.users.loadbalancer.server.port=4000"
+    environment:
+      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=users,service.version=${USERS_SERVICE_VERSION},deployment.environment=${SERVICE_ENVIRONMENT}
+    env_file:
+      - path: .env
+        required: true
 
   db:
     image: mongo:4.2.23
