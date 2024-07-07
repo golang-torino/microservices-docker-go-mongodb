@@ -16,7 +16,6 @@ func (app *application) routes() *mux.Router {
 			app.measures.requests.Add(context.Background(), 1,
 				metric.WithAttributes(semconv.HTTPRoute(p)),
 			)
-			app.log.Error("HERE")
 			h(w, r)
 		})
 	}

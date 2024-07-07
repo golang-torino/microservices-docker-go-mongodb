@@ -95,9 +95,7 @@ func newTraceProvider() (*trace.TracerProvider, error) {
 	}
 
 	traceProvider := trace.NewTracerProvider(
-		trace.WithBatcher(traceExporter,
-			// Default is 5s. Set to 1s for demonstrative purposes.
-			trace.WithBatchTimeout(time.Second)),
+		trace.WithSyncer(traceExporter),
 		trace.WithBatcher(grpcExporter),
 	)
 	return traceProvider, nil
@@ -116,11 +114,11 @@ func newMeterProvider() (*metric.MeterProvider, error) {
 
 	meterProvider := metric.NewMeterProvider(
 		metric.WithReader(metric.NewPeriodicReader(metricExporter,
-			// Default is 1m. Set to 3s for demonstrative purposes.
-			metric.WithInterval(3*time.Second))),
+			// Default is 1m. Set to 1s for demonstrative purposes.
+			metric.WithInterval(1*time.Second))),
 		metric.WithReader(metric.NewPeriodicReader(grpcExporter,
-			// Default is 1m. Set to 3s for demonstrative purposes.
-			metric.WithInterval(3*time.Second))),
+			// Default is 1m. Set to 1s for demonstrative purposes.
+			metric.WithInterval(1*time.Second))),
 	)
 	return meterProvider, nil
 }
