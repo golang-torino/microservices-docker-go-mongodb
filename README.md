@@ -53,6 +53,13 @@ Pay attention to:
 - updating `OTEL_EXPORTER_OTLP_ENDPOINT` with your backend endpoint
 - updating `OTEL_EXPORTER_OTLP_HEADERS` with your backend authentication token
 
+### Useful links
+
+- [Website](http://localhost)
+- [Traefik](http://localhost:8080)
+- [Grafana](http://localhost:8081)
+- [Jaeger](http://localhost:8082)
+
 ## Related Posts
 
 * [Traefik 2 - Advanced configuration with Docker Compose](https://mmorejon.io/en/blog/traefik-2-advanced-configuration-docker-compose/)
