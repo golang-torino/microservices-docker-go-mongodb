@@ -47,10 +47,11 @@ Services are instrumented through OpenTelemetry. If a service is not yet instrum
 
 Each service is already configured in Docker Compose to support otel signals collection.
 
-Copy the `.env.example` and provide all required information. Pay attention to:
-- update `SERVICE_ENVIRONMENT` if multiple users are using the same otel backend, to help with filtering.
-- update `OTEL_EXPORTER_OTLP_ENDPOINT` with your backend endpoint
-- update `OTEL_EXPORTER_OTLP_HEADERS` with your backend authentication token
+Copy the `.env.example` to `.env` and provide all required information.
+Pay attention to:
+- updating `SERVICE_ENVIRONMENT` if multiple users are using the same otel backend, to help with filtering
+- updating `OTEL_EXPORTER_OTLP_ENDPOINT` with your backend endpoint
+- updating `OTEL_EXPORTER_OTLP_HEADERS` with your backend authentication token
 
 ## Related Posts
 
