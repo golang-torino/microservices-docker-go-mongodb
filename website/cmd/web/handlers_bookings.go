@@ -62,7 +62,7 @@ func (app *application) loadBookingData(ctx context.Context, btd *bookingTemplat
 				ShowTimeDate: showtime.Date,
 			}
 			btd.BookingsData = append(btd.BookingsData, bookingData)
-			app.infoLog.Println(b.UserID)
+			app.log.Info("loded user id", "user_id", b.UserID)
 		}
 	} else {
 		b := btd.Booking
@@ -95,14 +95,14 @@ func (app *application) loadBookingData(ctx context.Context, btd *bookingTemplat
 func (app *application) bookingsList(w http.ResponseWriter, r *http.Request) {
 	// Get bookings list from API
 	var td bookingTemplateData
-	app.infoLog.Println("Calling bookings API...")
+	app.log.Info("Calling bookings API...")
 
 	err := app.getAPIContent(r.Context(), app.apis.bookings, &td.Bookings)
 	if err != nil {
 		app.errorLog.Println(err.Error())
 	}
-	app.infoLog.Println(td.Bookings)
-	app.infoLog.Println(td)
+	app.log.Info("retrieved bookings", "bookings", td.Bookings)
+	app.log.Info("prepared bookings template", "data", td)
 
 	app.loadBookingData(r.Context(), &td, true)
 
@@ -127,15 +127,16 @@ func (app *application) bookingsView(w http.ResponseWriter, r *http.Request) {
 
 	// Get bookings list from API
 	var td bookingTemplateData
-	app.infoLog.Println("Calling bookings API...")
+	app.log.Info("Calling bookings API...")
 	url := fmt.Sprintf("%s/%s", app.apis.bookings, bookingID)
 
 	err := app.getAPIContent(r.Context(), url, &td.Booking)
 	if err != nil {
 		app.errorLog.Println(err.Error())
 	}
-	app.infoLog.Println(td.Booking)
-	app.infoLog.Println(url)
+	app.log.Info("retrieved booking data from url",
+		"booking", td.Booking,
+		"url", url)
 
 	app.loadBookingData(r.Context(), &td, false)
 

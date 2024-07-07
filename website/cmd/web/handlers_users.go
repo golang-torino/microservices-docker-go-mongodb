@@ -22,7 +22,7 @@ func (app *application) usersList(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.errorLog.Println(err.Error())
 	}
-	app.infoLog.Println(utd.Users)
+	app.log.Info("retrieved users", "users", utd.Users)
 
 	// Load template files
 	files := []string{
@@ -51,12 +51,12 @@ func (app *application) usersView(w http.ResponseWriter, r *http.Request) {
 	userID := vars["id"]
 
 	// Get users list from API
-	app.infoLog.Println("Calling users API...")
+	app.log.Info("Calling users API...")
 	url := fmt.Sprintf("%s/%s", app.apis.users, userID)
 
 	var utd userTemplateData
 	app.getAPIContent(r.Context(), url, &utd.User)
-	app.infoLog.Println(utd.User)
+	app.log.Info("retrieved user", "user", utd.User)
 
 	// Load template files
 	files := []string{

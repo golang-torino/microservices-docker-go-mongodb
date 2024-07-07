@@ -5,11 +5,14 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
 
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/log/global"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -21,8 +24,8 @@ type apis struct {
 }
 
 type application struct {
+	log      *slog.Logger
 	errorLog *log.Logger
-	infoLog  *log.Logger
 	apis     apis
 
 	tracer   trace.Tracer
@@ -34,13 +37,12 @@ var errLog *log.Logger
 
 func main() {
 	// Create logger for writing information and error messages.
-	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errLog = log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	if err := run(); err != nil {
 		errLog.Fatal(err)
 	} else {
-		infoLog.Println("I'm done")
+		fmt.Println("I'm done")
 	}
 }
 
@@ -65,9 +67,12 @@ func run() error {
 		}
 	}()
 
+	l := otelslog.NewLogger("website", otelslog.WithLoggerProvider(global.GetLoggerProvider()))
+	slog.SetDefault(l)
+
 	// Initialize a new instance of application containing the dependencies.
 	app := &application{
-		infoLog:  infoLog,
+		log:      l,
 		errorLog: errLog,
 		apis: apis{
 			users:     *usersAPI,
@@ -91,6 +96,6 @@ func run() error {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	infoLog.Printf("Starting server on %s", serverURI)
+	l.Info("starting server", "server.uri", serverURI)
 	return srv.ListenAndServe()
 }

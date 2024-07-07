@@ -20,9 +20,9 @@ func (app *application) moviesList(w http.ResponseWriter, r *http.Request) {
 
 	// Get movies list from API
 	var mtd movieTemplateData
-	app.infoLog.Println("Calling movies API...")
+	app.log.Info("Calling movies API...")
 	app.getAPIContent(r.Context(), app.apis.movies, &mtd.Movies)
-	app.infoLog.Println(mtd.Movies)
+	app.log.Info("retrieved movies", "movies", mtd.Movies)
 
 	// Load template files
 	files := []string{
@@ -51,7 +51,7 @@ func (app *application) moviesView(w http.ResponseWriter, r *http.Request) {
 	movieID := vars["id"]
 
 	// Get movies list from API
-	app.infoLog.Println("Calling movies API...")
+	app.log.Info("Calling movies API...")
 	url := fmt.Sprintf("%s/%s", app.apis.movies, movieID)
 
 	resp, err := http.Get(url)
@@ -67,7 +67,7 @@ func (app *application) moviesView(w http.ResponseWriter, r *http.Request) {
 
 	var td movieTemplateData
 	json.Unmarshal(bodyBytes, &td.Movie)
-	app.infoLog.Println(td.Movie)
+	app.log.Info("prepared movie template", "data", td.Movie)
 
 	// Load template files
 	files := []string{
