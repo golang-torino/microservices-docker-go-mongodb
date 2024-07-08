@@ -4,7 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -17,9 +17,8 @@ import (
 )
 
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	users    *mongodb.UserModel
+	log   *slog.Logger
+	users *mongodb.UserModel
 }
 
 func main() {
@@ -38,10 +37,6 @@ func run() error {
 	mongoDatabase := flag.String("mongoDatabase", "users", "Database name")
 	enableCredentials := flag.Bool("enableCredentials", false, "Enable the use of credentials for mongo connection")
 	flag.Parse()
-
-	// Create logger for writing information and error messages.
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	errLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	shutdown, err := setupOTelSDK(context.Background())
 	if err != nil {
@@ -86,12 +81,11 @@ func run() error {
 		}
 	}()
 
-	infoLog.Printf("Database connection established")
+	l.Info("Database connection established")
 
 	// Initialize a new instance of application containing the dependencies.
 	app := &application{
-		infoLog:  infoLog,
-		errorLog: errLog,
+		log: l,
 		users: &mongodb.UserModel{
 			C: client.Database(*mongoDatabase).Collection("users"),
 		},
@@ -101,14 +95,13 @@ func run() error {
 	serverURI := fmt.Sprintf("%s:%d", *serverAddr, *serverPort)
 	srv := &http.Server{
 		Addr:         serverURI,
-		ErrorLog:     errLog,
 		Handler:      app.routes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
 
-	infoLog.Printf("Starting server on %s", serverURI)
+	l.Info("Starting server", "uri", serverURI)
 	return srv.ListenAndServe()
 }
 
