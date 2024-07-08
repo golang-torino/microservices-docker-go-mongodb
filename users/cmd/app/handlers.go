@@ -10,7 +10,7 @@ import (
 
 func (app *application) all(w http.ResponseWriter, r *http.Request) {
 	// Get all user stored
-	users, err := app.users.All()
+	users, err := app.users.All(r.Context())
 	if err != nil {
 		app.serverError(w, err)
 	}
@@ -35,7 +35,7 @@ func (app *application) findByID(w http.ResponseWriter, r *http.Request) {
 	id := vars["id"]
 
 	// Find user by id
-	m, err := app.users.FindByID(id)
+	m, err := app.users.FindByID(r.Context(), id)
 	if err != nil {
 		if err.Error() == "ErrNoDocuments" {
 			app.log.Info("User not found", "id", id)
@@ -69,7 +69,7 @@ func (app *application) insert(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Insert new user
-	insertResult, err := app.users.Insert(u)
+	insertResult, err := app.users.Insert(r.Context(), u)
 	if err != nil {
 		app.serverError(w, err)
 	}
@@ -83,7 +83,7 @@ func (app *application) delete(w http.ResponseWriter, r *http.Request) {
 	id := vars["id"]
 
 	// Delete user by id
-	deleteResult, err := app.users.Delete(id)
+	deleteResult, err := app.users.Delete(r.Context(), id)
 	if err != nil {
 		app.serverError(w, err)
 	}
