@@ -117,6 +117,8 @@ go.opentelemetry.io/contrib/bridges/otelslog v0.2.0 h1:8wisJ9dZUU1YZGJDsQgfCkexQ
 go.opentelemetry.io/contrib/bridges/otelslog v0.2.0/go.mod h1:/fUobpnNkWPrkMb7HKL80Ewfkqzyko1KUUX0h7aNtxo=
 go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux v0.52.0 h1:PnUXStMAOe64DoTyzXaJKgJgF0NbjC5OAz2ovHY7uQw=
 go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux v0.52.0/go.mod h1:1aUSETwl7de76j8Gg8fOBo6xRdAtJ1XqeXgaOkpikLQ=
+go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.53.0 h1:4K4tsIXefpVJtvA/8srF4V4y0akAoPHkIslgAkjixJA=
+go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.53.0/go.mod h1:jjdQuTGVsXV4vSs+CJ2qYDeDPf9yIJV23qlIzBm73Vg=
 go.opentelemetry.io/otel v1.28.0 h1:/SqNcYk+idO0CxKEUOtKQClMK/MimZihKYMruSMViUo=
 go.opentelemetry.io/otel v1.28.0/go.mod h1:q68ijF8Fc8CnMHKyzqL6akLO46ePnjkgfIMIjUIX9z4=
 go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.4.0 h1:zBPZAISA9NOc5cE8zydqDiS0itvg/P/0Hn9m72a5gvM=
