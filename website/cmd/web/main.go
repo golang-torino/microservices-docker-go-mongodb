@@ -1,29 +1,49 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
+
+	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/log/global"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type apis struct {
-	users string
-	movies string
+	users     string
+	movies    string
 	showtimes string
-	bookings string
+	bookings  string
 }
 
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
+	log  *slog.Logger
 	apis apis
+
+	tracer   trace.Tracer
+	measures *measures
 }
 
-func main() {
+var infoLog *log.Logger
+var errLog *log.Logger
 
+func main() {
+	if err := run(); err != nil {
+		fmt.Printf("exited with error: %s\n", err)
+		os.Exit(1)
+	} else {
+		fmt.Println("I'm done")
+	}
+}
+
+func run() error {
 	// Define command-line flags
 	serverAddr := flag.String("serverAddr", "", "HTTP server network address")
 	serverPort := flag.Int("serverPort", 8000, "HTTP server network port")
@@ -33,20 +53,31 @@ func main() {
 	bookingsAPI := flag.String("bookingsAPI", "http://localhost:4000/api/bookings/", "Bookings API")
 	flag.Parse()
 
-	// Create logger for writing information and error messages.
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	errLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	shutdown, err := setupOTelSDK(context.Background())
+	if err != nil {
+		errLog.Fatal(err)
+	}
+	defer func() {
+		// TODO: add a timeout?
+		if err := shutdown(context.Background()); err != nil {
+			errLog.Printf("failed shutting down tracer provider: %s", err)
+		}
+	}()
+
+	l := otelslog.NewLogger("website", otelslog.WithLoggerProvider(global.GetLoggerProvider()))
 
 	// Initialize a new instance of application containing the dependencies.
 	app := &application{
-		infoLog:  infoLog,
-		errorLog: errLog,
+		log: l,
 		apis: apis{
-			users: *usersAPI,
-			movies: *moviesAPI,
+			users:     *usersAPI,
+			movies:    *moviesAPI,
 			showtimes: *showtimesAPI,
-			bookings: *bookingsAPI,
+			bookings:  *bookingsAPI,
 		},
+
+		tracer:   otel.GetTracerProvider().Tracer("website"),
+		measures: createMeasures(otel.GetMeterProvider().Meter("website")),
 	}
 
 	// Initialize a new http.Server struct.
@@ -60,7 +91,6 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	infoLog.Printf("Starting server on %s", serverURI)
-	err := srv.ListenAndServe()
-	errLog.Fatal(err)
+	l.Info("starting server", "server.uri", serverURI)
+	return srv.ListenAndServe()
 }
