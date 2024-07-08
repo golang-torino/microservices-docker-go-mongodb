@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 )
 
@@ -38,7 +39,10 @@ func (app *application) getAPIContent(ctx context.Context, url string, templateD
 	defer span.End()
 
 	span.SetAttributes(semconv.HTTPURL(url))
-	resp, err := http.Get(url)
+
+	client := http.Client{Transport: otelhttp.NewTransport(http.DefaultTransport)}
+
+	resp, err := client.Get(url)
 	if err != nil {
 		return err
 	}
