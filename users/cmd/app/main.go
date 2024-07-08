@@ -21,7 +21,14 @@ type application struct {
 }
 
 func main() {
+	if err := run(); err != nil {
+		logFatal(fmt.Sprintf("exited with error: %s", err))
+	} else {
+		fmt.Println("I'm done")
+	}
+}
 
+func run() error {
 	// Define command-line flags
 	serverAddr := flag.String("serverAddr", "", "HTTP server network address")
 	serverPort := flag.Int("serverPort", 4000, "HTTP server network port")
@@ -46,14 +53,14 @@ func main() {
 	// Establish database connection
 	client, err := mongo.NewClient(co)
 	if err != nil {
-		errLog.Fatal(err)
+		logFatal(err.Error())
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	err = client.Connect(ctx)
 	if err != nil {
-		errLog.Fatal(err)
+		logFatal(err.Error())
 	}
 
 	defer func() {
@@ -85,6 +92,10 @@ func main() {
 	}
 
 	infoLog.Printf("Starting server on %s", serverURI)
-	err = srv.ListenAndServe()
-	errLog.Fatal(err)
+	return srv.ListenAndServe()
+}
+
+func logFatal(msg string) {
+	fmt.Println(msg)
+	os.Exit(1)
 }
