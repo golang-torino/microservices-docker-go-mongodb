@@ -1,5 +1,5 @@
 # base image
-FROM golang:1.19.3-alpine AS builder
+FROM golang:1.22.4-alpine AS builder
 # create appuser
 RUN adduser -D -g '' elf
 # create workspace
@@ -7,7 +7,7 @@ WORKDIR /opt/app/
 COPY go.mod go.sum ./
 # fetch dependancies
 RUN go mod download && \
-    go mod verify
+  go mod verify
 # copy the source code as the last step
 COPY . .
 # build binary
