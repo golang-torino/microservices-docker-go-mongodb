@@ -7,8 +7,8 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
-	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
@@ -89,7 +89,7 @@ func newTraceProvider() (*trace.TracerProvider, error) {
 		return nil, err
 	}
 
-	grpcExporter, err := otlptracegrpc.New(context.Background())
+	grpcExporter, err := otlptracehttp.New(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func newMeterProvider() (*metric.MeterProvider, error) {
 		return nil, err
 	}
 
-	grpcExporter, err := otlpmetricgrpc.New(context.Background())
+	grpcExporter, err := otlpmetrichttp.New(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -115,10 +115,10 @@ func newMeterProvider() (*metric.MeterProvider, error) {
 	meterProvider := metric.NewMeterProvider(
 		metric.WithReader(metric.NewPeriodicReader(metricExporter,
 			// Default is 1m. Set to 1s for demonstrative purposes.
-			metric.WithInterval(1*time.Second))),
+			metric.WithInterval(60*time.Second))),
 		metric.WithReader(metric.NewPeriodicReader(grpcExporter,
 			// Default is 1m. Set to 1s for demonstrative purposes.
-			metric.WithInterval(1*time.Second))),
+			metric.WithInterval(60*time.Second))),
 	)
 	return meterProvider, nil
 }
