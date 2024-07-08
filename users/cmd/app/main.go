@@ -13,12 +13,16 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/log/global"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type application struct {
 	log   *slog.Logger
 	users *mongodb.UserModel
+
+	tracer trace.Tracer
 }
 
 func main() {
@@ -89,6 +93,8 @@ func run() error {
 		users: &mongodb.UserModel{
 			C: client.Database(*mongoDatabase).Collection("users"),
 		},
+
+		tracer: otel.GetTracerProvider().Tracer("users"),
 	}
 
 	// Initialize a new http.Server struct.
