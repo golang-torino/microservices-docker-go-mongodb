@@ -21,7 +21,7 @@ func (app *application) all(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 	}
 
-	app.infoLog.Println("Users have been listed")
+	app.log.Info("Users have been listed")
 
 	// Send response back
 	w.Header().Set("Content-Type", "application/json")
@@ -38,7 +38,7 @@ func (app *application) findByID(w http.ResponseWriter, r *http.Request) {
 	m, err := app.users.FindByID(id)
 	if err != nil {
 		if err.Error() == "ErrNoDocuments" {
-			app.infoLog.Println("User not found")
+			app.log.Info("User not found", "id", id)
 			return
 		}
 		// Any other error will send an internal server error
@@ -51,7 +51,7 @@ func (app *application) findByID(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 	}
 
-	app.infoLog.Println("Have been found a user")
+	app.log.Info("Have been found a user")
 
 	// Send response back
 	w.Header().Set("Content-Type", "application/json")
@@ -74,7 +74,7 @@ func (app *application) insert(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 	}
 
-	app.infoLog.Printf("New user have been created, id=%s", insertResult.InsertedID)
+	app.log.Info("New user have been created", "id", insertResult.InsertedID)
 }
 
 func (app *application) delete(w http.ResponseWriter, r *http.Request) {
@@ -88,5 +88,5 @@ func (app *application) delete(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 	}
 
-	app.infoLog.Printf("Have been eliminated %d user(s)", deleteResult.DeletedCount)
+	app.log.Info("users deleted", "count", deleteResult.DeletedCount)
 }
