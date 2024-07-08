@@ -12,6 +12,8 @@ import (
 	"github.com/mmorejon/microservices-docker-go-mongodb/users/pkg/models/mongodb"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"go.opentelemetry.io/otel/log/global"
 )
 
 type application struct {
@@ -40,6 +42,21 @@ func run() error {
 	// Create logger for writing information and error messages.
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
+	shutdown, err := setupOTelSDK(context.Background())
+	if err != nil {
+		return fmt.Errorf("cannot setup otel sdk: %w", err)
+	}
+	defer func() {
+		// TODO: add a timeout?
+		if err = shutdown(context.Background()); err != nil {
+
+			logFatal(fmt.Sprintf("failed shutting down tracer provider: %s\n", err))
+		}
+	}()
+
+	l := otelslog.NewLogger("website", otelslog.WithLoggerProvider(global.GetLoggerProvider()))
+	slog.SetDefault(l)
 
 	// Create mongo client configuration
 	co := options.Client().ApplyURI(*mongoURI)
