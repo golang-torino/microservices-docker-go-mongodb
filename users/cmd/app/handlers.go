@@ -9,11 +9,16 @@ import (
 )
 
 func (app *application) all(w http.ResponseWriter, r *http.Request) {
+
+	ctx, span := app.tracer.Start(r.Context(), "db get all users")
+
 	// Get all user stored
-	users, err := app.users.All(r.Context())
+	users, err := app.users.All(ctx)
 	if err != nil {
 		app.serverError(w, err)
 	}
+
+	span.End()
 
 	// Convert user list into json encoding
 	b, err := json.Marshal(users)
@@ -34,8 +39,10 @@ func (app *application) findByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
+	ctx, span := app.tracer.Start(r.Context(), "get user by id")
+
 	// Find user by id
-	m, err := app.users.FindByID(r.Context(), id)
+	m, err := app.users.FindByID(ctx, id)
 	if err != nil {
 		if err.Error() == "ErrNoDocuments" {
 			app.log.Info("User not found", "id", id)
@@ -44,6 +51,8 @@ func (app *application) findByID(w http.ResponseWriter, r *http.Request) {
 		// Any other error will send an internal server error
 		app.serverError(w, err)
 	}
+
+	span.End()
 
 	// Convert user to json encoding
 	b, err := json.Marshal(m)
@@ -68,11 +77,15 @@ func (app *application) insert(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 	}
 
+	ctx, span := app.tracer.Start(r.Context(), "insert user")
+
 	// Insert new user
-	insertResult, err := app.users.Insert(r.Context(), u)
+	insertResult, err := app.users.Insert(ctx, u)
 	if err != nil {
 		app.serverError(w, err)
 	}
+
+	span.End()
 
 	app.log.Info("New user have been created", "id", insertResult.InsertedID)
 }
