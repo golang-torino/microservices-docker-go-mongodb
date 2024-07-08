@@ -9,11 +9,16 @@ import (
 )
 
 func (app *application) all(w http.ResponseWriter, r *http.Request) {
+
+	ctx, span := app.tracer.Start(r.Context(), "db get all users")
+
 	// Get all user stored
-	users, err := app.users.All()
+	users, err := app.users.All(ctx)
 	if err != nil {
 		app.serverError(w, err)
 	}
+
+	span.End()
 
 	// Convert user list into json encoding
 	b, err := json.Marshal(users)
@@ -21,7 +26,7 @@ func (app *application) all(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 	}
 
-	app.infoLog.Println("Users have been listed")
+	app.log.Info("Users have been listed")
 
 	// Send response back
 	w.Header().Set("Content-Type", "application/json")
@@ -34,16 +39,20 @@ func (app *application) findByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
+	ctx, span := app.tracer.Start(r.Context(), "get user by id")
+
 	// Find user by id
-	m, err := app.users.FindByID(id)
+	m, err := app.users.FindByID(ctx, id)
 	if err != nil {
 		if err.Error() == "ErrNoDocuments" {
-			app.infoLog.Println("User not found")
+			app.log.Info("User not found", "id", id)
 			return
 		}
 		// Any other error will send an internal server error
 		app.serverError(w, err)
 	}
+
+	span.End()
 
 	// Convert user to json encoding
 	b, err := json.Marshal(m)
@@ -51,7 +60,7 @@ func (app *application) findByID(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 	}
 
-	app.infoLog.Println("Have been found a user")
+	app.log.Info("Have been found a user")
 
 	// Send response back
 	w.Header().Set("Content-Type", "application/json")
@@ -68,13 +77,17 @@ func (app *application) insert(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 	}
 
+	ctx, span := app.tracer.Start(r.Context(), "insert user")
+
 	// Insert new user
-	insertResult, err := app.users.Insert(u)
+	insertResult, err := app.users.Insert(ctx, u)
 	if err != nil {
 		app.serverError(w, err)
 	}
 
-	app.infoLog.Printf("New user have been created, id=%s", insertResult.InsertedID)
+	span.End()
+
+	app.log.Info("New user have been created", "id", insertResult.InsertedID)
 }
 
 func (app *application) delete(w http.ResponseWriter, r *http.Request) {
@@ -83,10 +96,10 @@ func (app *application) delete(w http.ResponseWriter, r *http.Request) {
 	id := vars["id"]
 
 	// Delete user by id
-	deleteResult, err := app.users.Delete(id)
+	deleteResult, err := app.users.Delete(r.Context(), id)
 	if err != nil {
 		app.serverError(w, err)
 	}
 
-	app.infoLog.Printf("Have been eliminated %d user(s)", deleteResult.DeletedCount)
+	app.log.Info("users deleted", "count", deleteResult.DeletedCount)
 }
