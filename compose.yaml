@@ -1,6 +1,6 @@
 services:
   proxy:
-    image: traefik:v3.0.2
+    image: traefik:v3.1.4
     command:
       # - "--log.level=DEBUG"
       # - "--api=true"
@@ -176,7 +176,7 @@ services:
       - "traefik.enable=false"
 
   prometheus:
-    image: prom/prometheus:v2.52.0
+    image: prom/prometheus:v2.54.1
     command:
       - "--config.file=/etc/prometheus/prom.yml"
     restart: always
@@ -189,7 +189,7 @@ services:
       - "traefik.enable=false"
 
   otelcol:
-    image: otel/opentelemetry-collector:0.102.1
+    image: otel/opentelemetry-collector:0.110.0
     restart: always
     depends_on:
       - prometheus
@@ -200,7 +200,7 @@ services:
       - "traefik.enable=false"
 
   grafana:
-    image: grafana/grafana:10.4.4
+    image: grafana/grafana:11.2.2
     volumes:
       - ./hack/grafana.ini:/etc/grafana/grafana.ini
       - ./hack/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yaml
@@ -217,7 +217,7 @@ services:
       - "traefik.enable=false"
 
   jaeger:
-    image: jaegertracing/all-in-one:1.58.0
+    image: jaegertracing/all-in-one:1.61.0
     volumes:
       - "./hack/jaeger-ui.json:/etc/jaeger/jaeger-ui.json"
     command: --query.ui-config /etc/jaeger/jaeger-ui.json
