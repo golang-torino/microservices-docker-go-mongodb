@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
 	"text/template"
+
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -18,20 +22,27 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
 	}
 
 	err = ts.Execute(w, nil)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 	}
 }
 
-func (app *application) getAPIContent(url string, templateData interface{}) error {
-	resp, err := http.Get(url)
+func (app *application) getAPIContent(ctx context.Context, url string, templateData interface{}) error {
+	_, span := app.tracer.Start(ctx, "getAPIContent")
+	defer span.End()
+
+	span.SetAttributes(semconv.HTTPURL(url))
+
+	client := http.Client{Transport: otelhttp.NewTransport(http.DefaultTransport)}
+
+	resp, err := client.Get(url)
 	if err != nil {
 		return err
 	}
