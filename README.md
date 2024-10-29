@@ -29,11 +29,7 @@ Container images used support multi-architectures (amd64, arm/v7 and arm64).
 
 ## Deployment
 
-The application can be deployed in both environments: **local machine** or in a **kubernetes cluster**. You can find the appropriate documentation for each case in the following links:
-
-* [local machine (docker compose)](./docs/localhost.md)
-* [kubernetes (helm)](./docs/kubernetes-helm.md)
-* [kubernetes (timoni)](./docs/kubernetes-timoni.md)
+The application can be deployed with Docker Compose ([docs](./docs/localhost.md)).
 
 ## How To Use Cinema Services
 
