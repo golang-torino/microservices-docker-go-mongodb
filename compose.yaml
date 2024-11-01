@@ -203,8 +203,11 @@ services:
   grafana:
     image: grafana/grafana:11.2.2
     volumes:
-      - ./hack/grafana.ini:/etc/grafana/grafana.ini
-      - ./hack/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yaml
+      - ./hack/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./hack/grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yaml
+      - ./hack/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/default.yaml
+      - ./hack/grafana/dashboard-logs.json:/etc/grafana/provisioning/dashboards/logs.json
+      - ./hack/grafana/dashboard-metrics.json:/etc/grafana/provisioning/dashboards/metrics.json
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
