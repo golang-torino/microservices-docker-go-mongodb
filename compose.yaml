@@ -56,8 +56,7 @@ services:
       - "traefik.http.routers.website.rule=PathPrefix(`/`)"
       - "traefik.http.services.website.loadbalancer.server.port=8000"
     environment:
-      - OTEL_METRICS_EXPORTER=otlp
-      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.name=website,service.version=${WEBSITE_SERVICE_VERSION},deployment.environment=${SERVICE_ENVIRONMENT}
     env_file:
       - path: .env
@@ -82,8 +81,6 @@ services:
       # Apply middlewares
       # - "traefik.http.routers.movies.middlewares=my-header,my-compress"
     environment:
-      - OTEL_METRICS_EXPORTER=otlp
-      - OTEL_LOGS_EXPORTER=otlp
       - OTEL_RESOURCE_ATTRIBUTES=service.name=movies,service.version=${MOVIES_SERVICE_VERSION},deployment.environment=${SERVICE_ENVIRONMENT}
     env_file:
       - path: .env
@@ -106,8 +103,6 @@ services:
       # - "traefik.http.routers.bookings.rule=PathPrefix(`/api/bookings/`)"
       # - "traefik.http.services.bookings.loadbalancer.server.port=4000"
     environment:
-      - OTEL_METRICS_EXPORTER=otlp
-      - OTEL_LOGS_EXPORTER=otlp
       - OTEL_RESOURCE_ATTRIBUTES=service.name=bookings,service.version=${BOOKINGS_SERVICE_VERSION},deployment.environment=${SERVICE_ENVIRONMENT}
     env_file:
       - path: .env
@@ -130,8 +125,6 @@ services:
       # - "traefik.http.routers.showtimes.rule=PathPrefix(`/api/showtimes/`)"
       # - "traefik.http.services.showtimes.loadbalancer.server.port=4000"
     environment:
-      - OTEL_METRICS_EXPORTER=otlp
-      - OTEL_LOGS_EXPORTER=otlp
       - OTEL_RESOURCE_ATTRIBUTES=service.name=showtimes,service.version=${SHOWTIMES_SERVICE_VERSION},deployment.environment=${SERVICE_ENVIRONMENT}
     env_file:
       - path: .env
@@ -154,8 +147,7 @@ services:
       # - "traefik.http.routers.users.rule=PathPrefix(`/api/users/`)"
       # - "traefik.http.services.users.loadbalancer.server.port=4000"
     environment:
-      - OTEL_METRICS_EXPORTER=otlp
-      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.name=users,service.version=${USERS_SERVICE_VERSION},deployment.environment=${SERVICE_ENVIRONMENT}
     env_file:
       - path: .env
@@ -181,9 +173,7 @@ services:
       - "--config.file=/etc/prometheus/prom.yml"
     restart: always
     volumes:
-      # Store Prometheus data in a volume:
       - prom_data:/prometheus
-      # Mount the prom.yml config file
       - ./hack/prom.yml:/etc/prometheus/prom.yml
     labels:
       - "traefik.enable=false"
@@ -196,6 +186,17 @@ services:
     volumes:
       # Mount the otelcol.yml config file
       - ./hack/otelcol.yml:/etc/otelcol/config.yaml
+    labels:
+      - "traefik.enable=false"
+
+  loki:
+    image: grafana/loki:3.2.1
+    command:
+      - "-config.file=/etc/loki/loki.yaml"
+    restart: always
+    volumes:
+      - loki_data:/loki
+      - ./hack/loki.yaml:/etc/loki/loki.yaml
     labels:
       - "traefik.enable=false"
 
@@ -239,3 +240,4 @@ services:
 
 volumes:
   prom_data:
+  loki_data:

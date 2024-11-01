@@ -4,7 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -12,16 +12,28 @@ import (
 	"github.com/mmorejon/microservices-docker-go-mongodb/users/pkg/models/mongodb"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.opentelemetry.io/contrib/bridges/otelslog"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/log/global"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	users    *mongodb.UserModel
+	log   *slog.Logger
+	users *mongodb.UserModel
+
+	tracer trace.Tracer
 }
 
 func main() {
+	if err := run(); err != nil {
+		logFatal(fmt.Sprintf("exited with error: %s", err))
+	} else {
+		fmt.Println("I'm done")
+	}
+}
 
+func run() error {
 	// Define command-line flags
 	serverAddr := flag.String("serverAddr", "", "HTTP server network address")
 	serverPort := flag.Int("serverPort", 4000, "HTTP server network port")
@@ -30,9 +42,20 @@ func main() {
 	enableCredentials := flag.Bool("enableCredentials", false, "Enable the use of credentials for mongo connection")
 	flag.Parse()
 
-	// Create logger for writing information and error messages.
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	errLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	shutdown, err := setupOTelSDK(context.Background())
+	if err != nil {
+		return fmt.Errorf("cannot setup otel sdk: %w", err)
+	}
+	defer func() {
+		// TODO: add a timeout?
+		if err = shutdown(context.Background()); err != nil {
+
+			logFatal(fmt.Sprintf("failed shutting down tracer provider: %s\n", err))
+		}
+	}()
+
+	l := otelslog.NewLogger("website", otelslog.WithLoggerProvider(global.GetLoggerProvider()))
+	slog.SetDefault(l)
 
 	// Create mongo client configuration
 	co := options.Client().ApplyURI(*mongoURI)
@@ -46,14 +69,14 @@ func main() {
 	// Establish database connection
 	client, err := mongo.NewClient(co)
 	if err != nil {
-		errLog.Fatal(err)
+		logFatal(err.Error())
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	err = client.Connect(ctx)
 	if err != nil {
-		errLog.Fatal(err)
+		logFatal(err.Error())
 	}
 
 	defer func() {
@@ -62,29 +85,33 @@ func main() {
 		}
 	}()
 
-	infoLog.Printf("Database connection established")
+	l.Info("Database connection established")
 
 	// Initialize a new instance of application containing the dependencies.
 	app := &application{
-		infoLog:  infoLog,
-		errorLog: errLog,
+		log: l,
 		users: &mongodb.UserModel{
 			C: client.Database(*mongoDatabase).Collection("users"),
 		},
+
+		tracer: otel.GetTracerProvider().Tracer("users"),
 	}
 
 	// Initialize a new http.Server struct.
 	serverURI := fmt.Sprintf("%s:%d", *serverAddr, *serverPort)
 	srv := &http.Server{
 		Addr:         serverURI,
-		ErrorLog:     errLog,
 		Handler:      app.routes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
 
-	infoLog.Printf("Starting server on %s", serverURI)
-	err = srv.ListenAndServe()
-	errLog.Fatal(err)
+	l.Info("Starting server", "uri", serverURI)
+	return srv.ListenAndServe()
+}
+
+func logFatal(msg string) {
+	fmt.Println(msg)
+	os.Exit(1)
 }

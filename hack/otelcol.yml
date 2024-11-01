@@ -3,17 +3,25 @@ receivers:
   otlp:
     protocols:
       grpc:
+        endpoint: 0.0.0.0:4317
       http:
+        endpoint: 0.0.0.0:4318
 
-# Establish an endpoint for Prometheus to scrape from
 exporters:
-  logging:
-    loglevel: debug
-  prometheus:
-    endpoint: "0.0.0.0:8889"
+  otlphttp:
+    endpoint: http://loki:3100/otlp
+    tls:
+      insecure: true
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
 
 service:
   pipelines:
-    metrics:
+    logs:
       receivers: [otlp]
-      exporters: [prometheus]
+      exporters: [otlphttp]
+    traces:
+      receivers: [otlp]
+      exporters: [otlp/jaeger]

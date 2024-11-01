@@ -18,11 +18,11 @@ func (app *application) usersList(w http.ResponseWriter, r *http.Request) {
 
 	// Get users list from API
 	var utd userTemplateData
-	err := app.getAPIContent(app.apis.users, &utd.Users)
+	err := app.getAPIContent(r.Context(), app.apis.users, &utd.Users)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 	}
-	app.infoLog.Println(utd.Users)
+	app.log.Info("retrieved users", "users", utd.Users)
 
 	// Load template files
 	files := []string{
@@ -33,14 +33,14 @@ func (app *application) usersList(w http.ResponseWriter, r *http.Request) {
 
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
 	}
 
 	err = ts.Execute(w, utd)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 	}
 }
@@ -51,12 +51,12 @@ func (app *application) usersView(w http.ResponseWriter, r *http.Request) {
 	userID := vars["id"]
 
 	// Get users list from API
-	app.infoLog.Println("Calling users API...")
+	app.log.Info("Calling users API...")
 	url := fmt.Sprintf("%s/%s", app.apis.users, userID)
 
 	var utd userTemplateData
-	app.getAPIContent(url, &utd.User)
-	app.infoLog.Println(utd.User)
+	app.getAPIContent(r.Context(), url, &utd.User)
+	app.log.Info("retrieved user", "user", utd.User)
 
 	// Load template files
 	files := []string{
@@ -67,14 +67,14 @@ func (app *application) usersView(w http.ResponseWriter, r *http.Request) {
 
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
 	}
 
 	err = ts.Execute(w, utd.User)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 	}
 }
