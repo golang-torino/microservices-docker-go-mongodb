@@ -173,9 +173,7 @@ services:
       - "--config.file=/etc/prometheus/prom.yml"
     restart: always
     volumes:
-      # Store Prometheus data in a volume:
       - prom_data:/prometheus
-      # Mount the prom.yml config file
       - ./hack/prom.yml:/etc/prometheus/prom.yml
     labels:
       - "traefik.enable=false"
@@ -188,6 +186,17 @@ services:
     volumes:
       # Mount the otelcol.yml config file
       - ./hack/otelcol.yml:/etc/otelcol/config.yaml
+    labels:
+      - "traefik.enable=false"
+
+  loki:
+    image: grafana/loki:3.2.1
+    command:
+      - "-config.file=/etc/loki/loki.yaml"
+    restart: always
+    volumes:
+      - loki_data:/loki
+      - ./hack/loki.yaml:/etc/loki/loki.yaml
     labels:
       - "traefik.enable=false"
 
@@ -231,3 +240,4 @@ services:
 
 volumes:
   prom_data:
+  loki_data:
