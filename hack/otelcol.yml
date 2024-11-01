@@ -8,8 +8,10 @@ receivers:
         endpoint: 0.0.0.0:4318
 
 exporters:
-  logging:
-    loglevel: debug
+  otlphttp:
+    endpoint: http://loki:3100/otlp
+    tls:
+      insecure: true
   otlp/jaeger:
     endpoint: jaeger:4317
     tls:
@@ -17,6 +19,9 @@ exporters:
 
 service:
   pipelines:
+    logs:
+      receivers: [otlp]
+      exporters: [otlphttp]
     traces:
       receivers: [otlp]
       exporters: [otlp/jaeger]
