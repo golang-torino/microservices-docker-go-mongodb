@@ -56,7 +56,6 @@ services:
       - "traefik.http.routers.website.rule=PathPrefix(`/`)"
       - "traefik.http.services.website.loadbalancer.server.port=8000"
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.name=website,service.version=${WEBSITE_SERVICE_VERSION},deployment.environment=${SERVICE_ENVIRONMENT}
     env_file:
       - path: .env
@@ -147,7 +146,6 @@ services:
       # - "traefik.http.routers.users.rule=PathPrefix(`/api/users/`)"
       # - "traefik.http.services.users.loadbalancer.server.port=4000"
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4317
       - OTEL_RESOURCE_ATTRIBUTES=service.name=users,service.version=${USERS_SERVICE_VERSION},deployment.environment=${SERVICE_ENVIRONMENT}
     env_file:
       - path: .env
@@ -171,6 +169,7 @@ services:
     image: prom/prometheus:v2.54.1
     command:
       - "--config.file=/etc/prometheus/prom.yml"
+      - "--log.level=debug"
     restart: always
     volumes:
       - prom_data:/prometheus
@@ -183,6 +182,7 @@ services:
     restart: always
     depends_on:
       - prometheus
+      - loki
     volumes:
       # Mount the otelcol.yml config file
       - ./hack/otelcol.yml:/etc/otelcol/config.yaml

@@ -15,11 +15,20 @@ import (
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/log/global"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
+type applicationMeters struct {
+	foundUsers   metric.Int64Counter
+	createdUsers metric.Int64Counter
+	deletedUsers metric.Int64Counter
+}
+
 type application struct {
-	log   *slog.Logger
+	log  *slog.Logger
+	mets applicationMeters
+
 	users *mongodb.UserModel
 
 	tracer trace.Tracer
@@ -57,6 +66,21 @@ func run() error {
 	l := otelslog.NewLogger("website", otelslog.WithLoggerProvider(global.GetLoggerProvider()))
 	slog.SetDefault(l)
 
+	m := otel.GetMeterProvider()
+
+	foundUsersMeter, err := m.Meter("users").Int64Counter("users_found", metric.WithDescription("Number of users found"), metric.WithUnit("1"))
+	if err != nil {
+		logFatal(err.Error())
+	}
+	createdUsersMeter, err := m.Meter("users").Int64Counter("users_created", metric.WithDescription("Number of users created"), metric.WithUnit("1"))
+	if err != nil {
+		logFatal(err.Error())
+	}
+	deletedUsersMeter, err := m.Meter("users").Int64Counter("users_deleted", metric.WithDescription("Number of users deleted"), metric.WithUnit("1"))
+	if err != nil {
+		logFatal(err.Error())
+	}
+
 	// Create mongo client configuration
 	co := options.Client().ApplyURI(*mongoURI)
 	if *enableCredentials {
@@ -74,8 +98,7 @@ func run() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	err = client.Connect(ctx)
-	if err != nil {
+	if err := client.Connect(ctx); err != nil {
 		logFatal(err.Error())
 	}
 
@@ -90,6 +113,11 @@ func run() error {
 	// Initialize a new instance of application containing the dependencies.
 	app := &application{
 		log: l,
+		mets: applicationMeters{
+			foundUsers:   foundUsersMeter,
+			createdUsers: createdUsersMeter,
+			deletedUsers: deletedUsersMeter,
+		},
 		users: &mongodb.UserModel{
 			C: client.Database(*mongoDatabase).Collection("users"),
 		},
@@ -108,6 +136,7 @@ func run() error {
 	}
 
 	l.Info("Starting server", "uri", serverURI)
+
 	return srv.ListenAndServe()
 }
 

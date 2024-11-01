@@ -12,6 +12,16 @@ exporters:
     endpoint: http://loki:3100/otlp
     tls:
       insecure: true
+  prometheus:
+    endpoint: "0.0.0.0:1234"
+    namespace: golang-torino
+    const_labels:
+      language: golang
+      platform: docker
+    send_timestamps: true
+    metric_expiration: 180m
+    resource_to_telemetry_conversion:
+      enabled: true
   otlp/jaeger:
     endpoint: jaeger:4317
     tls:
@@ -22,6 +32,17 @@ service:
     logs:
       receivers: [otlp]
       exporters: [otlphttp]
+    metrics:
+      receivers: [otlp]
+      exporters: [prometheus]
     traces:
       receivers: [otlp]
       exporters: [otlp/jaeger]
+  telemetry:
+    metrics:
+      readers:
+        - pull:
+            exporter:
+              prometheus:
+                host: "0.0.0.0"
+                port: 8888
