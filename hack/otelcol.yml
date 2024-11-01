@@ -25,3 +25,11 @@ service:
     traces:
       receivers: [otlp]
       exporters: [otlp/jaeger]
+  telemetry:
+    metrics:
+      readers:
+        - pull:
+            exporter:
+              prometheus:
+                host: "0.0.0.0"
+                port: 8888
