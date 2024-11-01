@@ -83,8 +83,7 @@ func newPropagator() propagation.TextMapPropagator {
 }
 
 func newTraceProvider() (*trace.TracerProvider, error) {
-	traceExporter, err := stdouttrace.New(
-		stdouttrace.WithPrettyPrint())
+	traceExporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
 	if err != nil {
 		return nil, err
 	}
@@ -98,6 +97,7 @@ func newTraceProvider() (*trace.TracerProvider, error) {
 		trace.WithSyncer(traceExporter),
 		trace.WithBatcher(grpcExporter),
 	)
+
 	return traceProvider, nil
 }
 
@@ -113,13 +113,12 @@ func newMeterProvider() (*metric.MeterProvider, error) {
 	}
 
 	meterProvider := metric.NewMeterProvider(
-		metric.WithReader(metric.NewPeriodicReader(metricExporter,
-			// Default is 1m. Set to 1s for demonstrative purposes.
-			metric.WithInterval(1*time.Second))),
-		metric.WithReader(metric.NewPeriodicReader(grpcExporter,
-			// Default is 1m. Set to 1s for demonstrative purposes.
-			metric.WithInterval(1*time.Second))),
+		// Default is 1m. Set to 1s for demonstrative purposes.
+		metric.WithReader(metric.NewPeriodicReader(metricExporter, metric.WithInterval(1*time.Second))),
+		// Default is 1m. Set to 1s for demonstrative purposes.
+		metric.WithReader(metric.NewPeriodicReader(grpcExporter, metric.WithInterval(1*time.Second))),
 	)
+
 	return meterProvider, nil
 }
 
@@ -138,7 +137,6 @@ func newLoggerProvider() (*log.LoggerProvider, error) {
 
 	loggerProvider := log.NewLoggerProvider(
 		log.WithProcessor(log.NewSimpleProcessor(logExporter)),
-		// default interval is 1s
 		log.WithProcessor(log.NewBatchProcessor(httpExporter)),
 	)
 	return loggerProvider, nil

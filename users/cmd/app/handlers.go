@@ -9,7 +9,6 @@ import (
 )
 
 func (app *application) all(w http.ResponseWriter, r *http.Request) {
-
 	ctx, span := app.tracer.Start(r.Context(), "db get all users")
 
 	// Get all user stored
@@ -26,7 +25,8 @@ func (app *application) all(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 	}
 
-	app.log.Info("Users have been listed")
+	app.log.Info("Users have been listed", "count", len(users))
+	app.mets.foundUsers.Add(r.Context(), int64(len(users)))
 
 	// Send response back
 	w.Header().Set("Content-Type", "application/json")
@@ -60,7 +60,8 @@ func (app *application) findByID(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 	}
 
-	app.log.Info("Have been found a user")
+	app.log.Info("User has been found")
+	app.mets.foundUsers.Add(r.Context(), 1)
 
 	// Send response back
 	w.Header().Set("Content-Type", "application/json")
@@ -88,6 +89,8 @@ func (app *application) insert(w http.ResponseWriter, r *http.Request) {
 	span.End()
 
 	app.log.Info("New user have been created", "id", insertResult.InsertedID)
+
+	app.mets.createdUsers.Add(r.Context(), 1)
 }
 
 func (app *application) delete(w http.ResponseWriter, r *http.Request) {
@@ -102,4 +105,6 @@ func (app *application) delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.log.Info("users deleted", "count", deleteResult.DeletedCount)
+
+	app.mets.deletedUsers.Add(r.Context(), 1)
 }
