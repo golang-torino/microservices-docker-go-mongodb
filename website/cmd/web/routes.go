@@ -22,7 +22,7 @@ func (app *application) routes() *mux.Router {
 
 	// Register handler functions.
 	r := mux.NewRouter()
-	r.Use(otelmux.Middleware("my-server"))
+	r.Use(otelmux.Middleware("website-mux"))
 
 	handleAndCountVisits(r, "/", app.home)
 	handleAndCountVisits(r, "/users/list", app.usersList)

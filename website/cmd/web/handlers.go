@@ -35,14 +35,18 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) getAPIContent(ctx context.Context, url string, templateData interface{}) error {
-	_, span := app.tracer.Start(ctx, "getAPIContent")
+	ctx, span := app.tracer.Start(ctx, "getAPIContent")
 	defer span.End()
 
 	span.SetAttributes(semconv.HTTPURL(url))
 
 	client := http.Client{Transport: otelhttp.NewTransport(http.DefaultTransport)}
 
-	resp, err := client.Get(url)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
