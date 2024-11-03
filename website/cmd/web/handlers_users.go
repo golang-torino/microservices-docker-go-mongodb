@@ -31,6 +31,10 @@ func (app *application) usersList(w http.ResponseWriter, r *http.Request) {
 		"./ui/html/footer.partial.tmpl",
 	}
 
+	_, span := app.tracer.Start(r.Context(), "userList templating")
+	defer span.End()
+
+	span.SetAttributes(tpls2SpanAttrs(files)...)
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
 		app.log.Error(err.Error())
@@ -65,6 +69,10 @@ func (app *application) usersView(w http.ResponseWriter, r *http.Request) {
 		"./ui/html/footer.partial.tmpl",
 	}
 
+	_, span := app.tracer.Start(r.Context(), "userView templating")
+	defer span.End()
+
+	span.SetAttributes(tpls2SpanAttrs(files)...)
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
 		app.log.Error(err.Error())
