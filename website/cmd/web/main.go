@@ -31,7 +31,8 @@ type application struct {
 	measures *measures
 }
 
-var infoLog *log.Logger
+// an error logger for main failures and http.Server. These logs will not be shipped
+// to otel collection endpoint and will need to be collected differently.
 var errLog *log.Logger
 
 func main() {
@@ -60,10 +61,11 @@ func run() error {
 	defer func() {
 		// TODO: add a timeout?
 		if err := shutdown(context.Background()); err != nil {
-			errLog.Printf("failed shutting down tracer provider: %s", err)
+			errLog.Printf("failed shutting down otel SDK: %s", err)
 		}
 	}()
 
+	// otel does not support log package, so we use slog
 	l := otelslog.NewLogger("website", otelslog.WithLoggerProvider(global.GetLoggerProvider()))
 
 	// Initialize a new instance of application containing the dependencies.

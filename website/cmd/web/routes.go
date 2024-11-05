@@ -11,6 +11,8 @@ import (
 )
 
 func (app *application) routes() *mux.Router {
+	// otelmux middleware only provides tracing, so we implement our own
+	// wrapper to increment server request count metric.
 	handleAndCountVisits := func(r *mux.Router, p string, h http.HandlerFunc) {
 		r.HandleFunc(p, func(w http.ResponseWriter, r *http.Request) {
 			app.measures.requests.Add(context.Background(), 1,
@@ -22,6 +24,8 @@ func (app *application) routes() *mux.Router {
 
 	// Register handler functions.
 	r := mux.NewRouter()
+	// Register otelmux middleware to automatically collect traces
+	// from request routed by this router.
 	r.Use(otelmux.Middleware("website-mux"))
 
 	handleAndCountVisits(r, "/", app.home)

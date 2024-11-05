@@ -6,6 +6,7 @@ type measures struct {
 	requests metric.Int64Counter
 }
 
+// createMeasures instantiate all measures required by this service.
 func createMeasures(meter metric.Meter) *measures {
 	r, err := meter.Int64Counter("server.requests",
 		metric.WithDescription("Number of received requests"),
