@@ -1,13 +1,14 @@
-Ora che hai clonato il repo, che fare?
+Now that you have cloned the repo, what's next?
 
-1. Assicurati tutto funzioni. Lancia `make start` e quando e' tutto pronto visita [localhost](http://localhost). Devi vedere un sito, "Cinema Website".
-2. Ispeziona i vari tool di observability locali a disposizione, dovresti vedere tracce, metriche e log! Seguie [docs/observability](docs/observability.md).
-3. Clicca in giro e ispeziona quello che viene raccolto e come viene visualizzato. Quando ti senti pront* passa ai task qui sotto.
+1. Make sure everything is working. Run `make start` and when everything is ready visit [localhost](http://localhost). You should see a site, "Cinema Website".
+2. Click around the UI to generate some observability signals.
+3. Inspect the various local observability tools available, you should see traces, metrics and logs! Follow [docs/observability](docs/observability.md).
+4. Click around and inspect what is collected and how it is displayed. When you feel ready move on to the tasks below.
 
 ## Tasklist
 
-- Non tutti i servizi sono instrumentati! Obiettivo: instrumenta un servizio collezionando le tracce dal server
-  - Le tracce del server da sole non bastano, aggiungi delle tracce specifiche per ispezionare la comunicazione con il database.
-- Perche' nella traccia `website: /users/view/{id}` viene riportato due volte lo span `HTTP GET`? Cosa sta succedendo?
-- Non raccogliamo alcuna metrica dal nostro DB (MongoDB). Fai felice il DBA che e' in te, aggiungi la collezione di metriche e logs.
-- E' disponibile l'instrumentazione automatica con eBPF, perche' non provarla? https://github.com/open-telemetry/opentelemetry-go-instrumentation
+- Not all services are instrumented! Goal: instrument a service by collecting traces from the HTTP server.
+- Server traces alone are not enough, add specific traces to inspect communication with the database.
+- Why does the `website: /users/view/{id}` trace for `website` service reports the `HTTP GET` span twice? What's going on?
+- We do not collect any metrics from our DB (MongoDB). Make your inner DBA happy, add the collection of metrics and logs.
+- Automatic instrumentation with eBPF is available, why not try it? https://github.com/open-telemetry/opentelemetry-go-instrumentation
