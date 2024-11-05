@@ -16,9 +16,8 @@ type UserModel struct {
 }
 
 // All method will be used to get all records from the users table.
-func (m *UserModel) All() ([]models.User, error) {
+func (m *UserModel) All(ctx context.Context) ([]models.User, error) {
 	// Define variables
-	ctx := context.TODO()
 	uu := []models.User{}
 
 	// Find all users
@@ -35,7 +34,7 @@ func (m *UserModel) All() ([]models.User, error) {
 }
 
 // FindByID will be used to find a new user registry by id
-func (m *UserModel) FindByID(id string) (*models.User, error) {
+func (m *UserModel) FindByID(ctx context.Context, id string) (*models.User, error) {
 	p, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
@@ -43,7 +42,7 @@ func (m *UserModel) FindByID(id string) (*models.User, error) {
 
 	// Find user by id
 	var user = models.User{}
-	err = m.C.FindOne(context.TODO(), bson.M{"_id": p}).Decode(&user)
+	err = m.C.FindOne(ctx, bson.M{"_id": p}).Decode(&user)
 	if err != nil {
 		// Checks if the user was not found
 		if err == mongo.ErrNoDocuments {
@@ -56,15 +55,15 @@ func (m *UserModel) FindByID(id string) (*models.User, error) {
 }
 
 // Insert will be used to insert a new user
-func (m *UserModel) Insert(user models.User) (*mongo.InsertOneResult, error) {
-	return m.C.InsertOne(context.TODO(), user)
+func (m *UserModel) Insert(ctx context.Context, user models.User) (*mongo.InsertOneResult, error) {
+	return m.C.InsertOne(ctx, user)
 }
 
 // Delete will be used to delete a user
-func (m *UserModel) Delete(id string) (*mongo.DeleteResult, error) {
+func (m *UserModel) Delete(ctx context.Context, id string) (*mongo.DeleteResult, error) {
 	p, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
 	}
-	return m.C.DeleteOne(context.TODO(), bson.M{"_id": p})
+	return m.C.DeleteOne(ctx, bson.M{"_id": p})
 }

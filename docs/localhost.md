@@ -1,5 +1,13 @@
 # Cinema - Localhost Deployment
 
+## Quickstart
+
+```bash
+make start
+```
+
+You're welcome =)
+
 ## Overview
 
 The Cinema project can be deployed in a single machine (localhost) using Docker Compose V2.

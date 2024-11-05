@@ -56,8 +56,6 @@ services:
       - "traefik.http.routers.website.rule=PathPrefix(`/`)"
       - "traefik.http.services.website.loadbalancer.server.port=8000"
     environment:
-      - OTEL_METRICS_EXPORTER=otlp
-      - OTEL_LOGS_EXPORTER=otlp
       - OTEL_RESOURCE_ATTRIBUTES=service.name=website,service.version=${WEBSITE_SERVICE_VERSION},deployment.environment=${SERVICE_ENVIRONMENT}
     env_file:
       - path: .env
@@ -82,8 +80,6 @@ services:
       # Apply middlewares
       # - "traefik.http.routers.movies.middlewares=my-header,my-compress"
     environment:
-      - OTEL_METRICS_EXPORTER=otlp
-      - OTEL_LOGS_EXPORTER=otlp
       - OTEL_RESOURCE_ATTRIBUTES=service.name=movies,service.version=${MOVIES_SERVICE_VERSION},deployment.environment=${SERVICE_ENVIRONMENT}
     env_file:
       - path: .env
@@ -106,8 +102,6 @@ services:
       # - "traefik.http.routers.bookings.rule=PathPrefix(`/api/bookings/`)"
       # - "traefik.http.services.bookings.loadbalancer.server.port=4000"
     environment:
-      - OTEL_METRICS_EXPORTER=otlp
-      - OTEL_LOGS_EXPORTER=otlp
       - OTEL_RESOURCE_ATTRIBUTES=service.name=bookings,service.version=${BOOKINGS_SERVICE_VERSION},deployment.environment=${SERVICE_ENVIRONMENT}
     env_file:
       - path: .env
@@ -130,8 +124,6 @@ services:
       # - "traefik.http.routers.showtimes.rule=PathPrefix(`/api/showtimes/`)"
       # - "traefik.http.services.showtimes.loadbalancer.server.port=4000"
     environment:
-      - OTEL_METRICS_EXPORTER=otlp
-      - OTEL_LOGS_EXPORTER=otlp
       - OTEL_RESOURCE_ATTRIBUTES=service.name=showtimes,service.version=${SHOWTIMES_SERVICE_VERSION},deployment.environment=${SERVICE_ENVIRONMENT}
     env_file:
       - path: .env
@@ -154,8 +146,6 @@ services:
       # - "traefik.http.routers.users.rule=PathPrefix(`/api/users/`)"
       # - "traefik.http.services.users.loadbalancer.server.port=4000"
     environment:
-      - OTEL_METRICS_EXPORTER=otlp
-      - OTEL_LOGS_EXPORTER=otlp
       - OTEL_RESOURCE_ATTRIBUTES=service.name=users,service.version=${USERS_SERVICE_VERSION},deployment.environment=${SERVICE_ENVIRONMENT}
     env_file:
       - path: .env
@@ -179,11 +169,10 @@ services:
     image: prom/prometheus:v2.54.1
     command:
       - "--config.file=/etc/prometheus/prom.yml"
+      - "--log.level=debug"
     restart: always
     volumes:
-      # Store Prometheus data in a volume:
       - prom_data:/prometheus
-      # Mount the prom.yml config file
       - ./hack/prom.yml:/etc/prometheus/prom.yml
     labels:
       - "traefik.enable=false"
@@ -193,17 +182,32 @@ services:
     restart: always
     depends_on:
       - prometheus
+      - loki
     volumes:
       # Mount the otelcol.yml config file
       - ./hack/otelcol.yml:/etc/otelcol/config.yaml
     labels:
       - "traefik.enable=false"
 
+  loki:
+    image: grafana/loki:3.2.1
+    command:
+      - "-config.file=/etc/loki/loki.yaml"
+    restart: always
+    volumes:
+      - loki_data:/loki
+      - ./hack/loki.yaml:/etc/loki/loki.yaml
+    labels:
+      - "traefik.enable=false"
+
   grafana:
     image: grafana/grafana:11.2.2
     volumes:
-      - ./hack/grafana.ini:/etc/grafana/grafana.ini
-      - ./hack/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yaml
+      - ./hack/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./hack/grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yaml
+      - ./hack/grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/default.yaml
+      - ./hack/grafana/dashboard-logs.json:/etc/grafana/provisioning/dashboards/logs.json
+      - ./hack/grafana/dashboard-metrics.json:/etc/grafana/provisioning/dashboards/metrics.json
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
@@ -239,3 +243,4 @@ services:
 
 volumes:
   prom_data:
+  loki_data:

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"text/template"
@@ -9,6 +10,8 @@ import (
 	"github.com/mmorejon/microservices-docker-go-mongodb/bookings/pkg/models"
 	modelsShowTime "github.com/mmorejon/microservices-docker-go-mongodb/showtimes/pkg/models"
 	modelsUser "github.com/mmorejon/microservices-docker-go-mongodb/users/pkg/models"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type bookingTemplateData struct {
@@ -24,10 +27,15 @@ type bookingData struct {
 	ShowTimeDate string
 }
 
-func (app *application) loadBookingData(btd *bookingTemplateData, isList bool) {
+func (app *application) loadBookingData(ctx context.Context, btd *bookingTemplateData, isList bool) {
+	ctx, span := app.tracer.Start(ctx, "load booking data")
+	defer span.End()
+
 	// Clean booking data
 	btd.BookingsData = []bookingData{}
 	btd.BookingData = bookingData{}
+
+	span.SetAttributes(attribute.Bool("list", isList))
 
 	// Load booking data
 	if isList {
@@ -35,17 +43,17 @@ func (app *application) loadBookingData(btd *bookingTemplateData, isList bool) {
 			// Load user data
 			userURL := fmt.Sprintf("%s/%s", app.apis.users, b.UserID)
 			var user modelsUser.User
-			err := app.getAPIContent(userURL, &user)
+			err := app.getAPIContent(ctx, userURL, &user)
 			if err != nil {
-				app.errorLog.Println(err.Error())
+				app.log.Error(err.Error())
 			}
 
 			// Load showtime data
 			showtimeURL := fmt.Sprintf("%s/%s", app.apis.showtimes, b.ShowtimeID)
 			var showtime modelsShowTime.ShowTime
-			err = app.getAPIContent(showtimeURL, &showtime)
+			err = app.getAPIContent(ctx, showtimeURL, &showtime)
 			if err != nil {
-				app.errorLog.Println(err.Error())
+				app.log.Error(err.Error())
 			}
 
 			bookingData := bookingData{
@@ -54,7 +62,7 @@ func (app *application) loadBookingData(btd *bookingTemplateData, isList bool) {
 				ShowTimeDate: showtime.Date,
 			}
 			btd.BookingsData = append(btd.BookingsData, bookingData)
-			app.infoLog.Println(b.UserID)
+			app.log.Info("loded user id", "user_id", b.UserID)
 		}
 	} else {
 		b := btd.Booking
@@ -62,18 +70,18 @@ func (app *application) loadBookingData(btd *bookingTemplateData, isList bool) {
 		// Load user data
 		userURL := fmt.Sprintf("%s/%s", app.apis.users, b.UserID)
 		var user modelsUser.User
-		err := app.getAPIContent(userURL, &user)
+		err := app.getAPIContent(ctx, userURL, &user)
 		if err != nil {
-			app.errorLog.Println(err.Error())
+			app.log.Error(err.Error())
 		}
 
 		// Load showtime data
 		showtimeURL := fmt.Sprintf("%s/%s", app.apis.showtimes, b.ShowtimeID)
 		var showtime modelsShowTime.ShowTime
 
-		err = app.getAPIContent(showtimeURL, &showtime)
+		err = app.getAPIContent(ctx, showtimeURL, &showtime)
 		if err != nil {
-			app.errorLog.Println(err.Error())
+			app.log.Error(err.Error())
 		}
 
 		btd.BookingData = bookingData{
@@ -85,19 +93,18 @@ func (app *application) loadBookingData(btd *bookingTemplateData, isList bool) {
 }
 
 func (app *application) bookingsList(w http.ResponseWriter, r *http.Request) {
-
 	// Get bookings list from API
 	var td bookingTemplateData
-	app.infoLog.Println("Calling bookings API...")
+	app.log.Info("Calling bookings API...")
 
-	err := app.getAPIContent(app.apis.bookings, &td.Bookings)
+	err := app.getAPIContent(r.Context(), app.apis.bookings, &td.Bookings)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error(err.Error())
 	}
-	app.infoLog.Println(td.Bookings)
-	app.infoLog.Println(td)
+	app.log.Info("retrieved bookings", "bookings", td.Bookings)
+	app.log.Info("prepared bookings template", "data", td)
 
-	app.loadBookingData(&td, true)
+	app.loadBookingData(r.Context(), &td, true)
 
 	// Load template files
 	files := []string{
@@ -106,17 +113,10 @@ func (app *application) bookingsList(w http.ResponseWriter, r *http.Request) {
 		"./ui/html/footer.partial.tmpl",
 	}
 
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.errorLog.Println(err.Error())
+	if err = renderTemplates(app.tracer, r.Context(), files, td, w); err != nil {
+		app.log.Error("cannot render template", "error", err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
-	}
-
-	err = ts.Execute(w, td)
-	if err != nil {
-		app.errorLog.Println(err.Error())
-		http.Error(w, "Internal Server Error", 500)
 	}
 }
 
@@ -127,17 +127,20 @@ func (app *application) bookingsView(w http.ResponseWriter, r *http.Request) {
 
 	// Get bookings list from API
 	var td bookingTemplateData
-	app.infoLog.Println("Calling bookings API...")
+	app.log.Info("Calling bookings API...")
 	url := fmt.Sprintf("%s/%s", app.apis.bookings, bookingID)
 
-	err := app.getAPIContent(url, &td.Booking)
+	err := app.getAPIContent(r.Context(), url, &td.Booking)
 	if err != nil {
-		app.errorLog.Println(err.Error())
+		app.log.Error("cannot retrieve content from API", "error", err.Error())
+		http.Error(w, "Internal Server Error", 500)
+		return
 	}
-	app.infoLog.Println(td.Booking)
-	app.infoLog.Println(url)
+	app.log.Info("retrieved booking data from url",
+		"booking", td.Booking,
+		"url", url)
 
-	app.loadBookingData(&td, false)
+	app.loadBookingData(r.Context(), &td, false)
 
 	// Load template files
 	files := []string{
@@ -146,16 +149,26 @@ func (app *application) bookingsView(w http.ResponseWriter, r *http.Request) {
 		"./ui/html/footer.partial.tmpl",
 	}
 
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.errorLog.Println(err.Error())
+	if err = renderTemplates(app.tracer, r.Context(), files, td, w); err != nil {
+		app.log.Error(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
+	}
+}
+
+func renderTemplates(t trace.Tracer, ctx context.Context, files []string, td bookingTemplateData, w http.ResponseWriter) error {
+	_, span := t.Start(ctx, "render template")
+	defer span.End()
+
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		return err
 	}
 
 	err = ts.Execute(w, td)
 	if err != nil {
-		app.errorLog.Println(err.Error())
-		http.Error(w, "Internal Server Error", 500)
+		return err
 	}
+
+	return nil
 }
